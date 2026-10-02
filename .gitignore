@@ -1,7 +1,6 @@
 .build/
 DerivedData/
 *.xcuserstate
-*.xcuserdata/
+xcuserdata/
 .DS_Store
-*.app
-*.dSYM
+EyeBreak.app/
