@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/Break.png" alt="LookAway notch-style break alert" width="640" />
+<img src="docs/assets/break-alert.png" alt="LookAway notch-style break alert" width="640" />
 
 # 👁️ LookAway
 
@@ -51,7 +51,7 @@ It lives quietly in your menu bar. When it's time, a small **notch-style panel**
 
 | Break Alert | Too Close | Safe Distance | Settings |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/assets/Break.png" width="200" alt="Break alert" /> | <img src="docs/assets/too-close.png" width="200" alt="Too close warning" /> | <img src="docs/assets/safe.png" width="200" alt="Safe distance" /> | <img src="docs/assets/settings.png" width="200" alt="Settings" /> |
+| <img src="docs/assets/break-alert.png" width="200" alt="Break alert" /> | <img src="docs/assets/too-close.png" width="200" alt="Too close warning" /> | <img src="docs/assets/safe.png" width="200" alt="Safe distance" /> | <img src="docs/assets/settings.png" width="200" alt="Settings" /> |
 
 </div>
 
@@ -265,7 +265,7 @@ LookAway/
 ├── README.md
 ├── docs/
 │   └── assets/
-│       ├── Break.png
+│       ├── break-alert.png
 │       ├── safe.png
 │       ├── settings.png
 │       └── too-close.png
