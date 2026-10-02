@@ -1,151 +1,182 @@
-# EyeBreak 👁️
+<div align="center">
 
-A native macOS menu bar app written in Swift (SwiftUI + AppKit) implementing the **20-20-20 rule**: every **20 minutes**, it reminds you to look at something **20 feet away** for **20 seconds**.
+# 👁️ LookAway
 
-The alert expands smoothly out of the **MacBook notch area**, functioning like a native **Dynamic Island** for macOS.
+### The 20-20-20 rule, delivered by your Mac's notch.
+
+A native macOS menu bar app that helps you build healthier screen habits with
+timed eye-break reminders, a notch-style interface, and on-device screen-distance awareness.
+
+<p>
+
+<img src="https://img.shields.io/badge/macOS-13%2B-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 13+" />
+
+<img src="https://img.shields.io/badge/Swift-FA7343?style=for-the-badge&logo=swift&logoColor=white" alt="Swift" />
+
+<img src="https://img.shields.io/badge/SwiftUI-0A84FF?style=for-the-badge&logo=swift&logoColor=white" alt="SwiftUI" />
+
+<img src="https://img.shields.io/badge/AppKit-007AFF?style=for-the-badge&logo=apple&logoColor=white" alt="AppKit" />
+
+<img src="https://img.shields.io/badge/Privacy-On--Device-5856D6?style=for-the-badge" alt="Privacy" />
+
+</p>
+
+<p>
+
+<a href="#-quick-start">Quick Start</a> ·
+<a href="#-features">Features</a> ·
+<a href="#-how-it-works">How It Works</a> ·
+<a href="#-engineering-highlights">Engineering</a> ·
+<a href="#-roadmap">Roadmap</a>
+
+</p>
+
+</div>
+
+---
+
+## 👀 Why LookAway?
+
+Long hours in front of a screen can make it easy to forget to take regular breaks.
+
+LookAway follows the simple **20-20-20 rule**:
+
+> Every **20 minutes**, look at something around **20 feet away** for **20 seconds**.
+
+Instead of relying on intrusive notifications, LookAway lives quietly in the macOS menu bar and uses a lightweight notch-style reminder when it's time for a break.
+
+The goal is simple:
+
+**Remind you without getting in your way.**
 
 ---
 
 ## ✨ Features
 
-- **Dynamic Island Notch Alert**:
-  - Automatically detects the physical camera notch using `NSScreen.safeAreaInsets`, `auxiliaryTopLeftArea`, and `auxiliaryTopRightArea`.
-  - Seamlessly blends with the notch geometry with continuous rounded bottom corners.
-  - Fallback for external displays and notchless Macs: displays a centered pill at the top of the display.
-  - Smooth spring expand/collapse animations directly out of and into the notch bezel.
-- **Non-Activating Window**:
-  - Borderless, transparent `NSPanel` with `.screenSaver` window level.
-  - Strictly non-activating (`canBecomeKey = false`, `canBecomeMain = false`), ensuring it **never steals keyboard focus** from Xcode, terminal, games, or work.
-- **Multi-Display Aware**:
-  - Displays the alert on the screen currently containing the mouse cursor.
-- **Smart Pause & Idle Detection**:
-  - Pauses timer when the Mac sleeps (`NSWorkspace.willSleepNotification`) or screen locks (`com.apple.screenIsLocked`).
-  - Automatically pauses when the user is idle for 5+ minutes (configurable) using Quartz `CGEventSource` input events, and resumes upon return.
-- **Screen Distance Guardian (Stay Far from Screen)**:
-  - Continuously monitors viewing distance using the FaceTime camera and Apple's on-device **Vision framework** (`VNDetectFaceRectanglesRequest`).
-  - If you lean in closer than an arm's length (< 12–14 inches / 30–35 cm) for more than 3 seconds, the notch alert expands in warning amber: *"Too close to the screen • Please sit back"*.
-  - When you move back to a safe distance, the alert turns green (*"Safe Distance ✓"*) and smoothly collapses back into the notch after 1.5 seconds.
-  - **100% Privacy-Preserving**: Runs purely on-device using Apple Neural Engine/CPU. Frames are analyzed in memory and immediately discarded. Video is never saved, recorded, or transmitted.
-  - Minimal resource usage: Samples at only 1 frame/sec when active, and turns off completely when the screen is locked, sleeping, or idle.
-- **Audio Feedback**:
-  - Plays soft system chimes at break start and completion (customizable sound: Tink, Glass, Hero, Ping, etc.).
-- **Pure Menu Bar App**:
-  - `LSUIElement = true` (no Dock icon, zero clutter).
-  - Status item with live time remaining, Pause/Resume, Take break now, Skip break, and Debug test alert.
-- **Native SwiftUI Settings**:
-  - Screen Distance toggle, sensitivity slider (Relaxed, Normal, Strict), and camera status indicator.
-  - Work interval & break duration sliders with quick presets.
-  - Launch at login toggle powered by `SMAppService.mainApp`.
-  - Audio chimes selection with preview.
-  - One-click "Test Break Alert" and "Test Screen Distance Alert" buttons.
+### ⏱️ 20-20-20 Eye Breaks
+
+- Automatically tracks your work interval
+- Reminds you when it's time to take a break
+- Configurable work interval
+- Configurable break duration
+- Countdown during the break
+- Automatically returns to the normal work state
 
 ---
 
-## 🛠️ Architecture & Code Structure
+### 🏝️ Notch-Style Break Alerts
 
-```
-EyeBreak/
-├── EyeBreak.xcodeproj      # Generated native Xcode project (XcodeGen)
-├── Package.swift           # Swift Package Manager manifest
-├── project.yml             # XcodeGen project specification
-├── EyeBreak.app            # Compiled and signed macOS application bundle
-├── Sources/
-│   ├── App/
-│   │   ├── AppDelegate.swift          # App lifecycle, notification handlers, CLI flags
-│   │   └── main.swift                 # Application entry point
-│   ├── Controllers/
-│   │   ├── MenuBarController.swift    # NSStatusItem, dynamic menu items, Settings window
-│   │   └── NotchWindowController.swift# Non-activating NSPanel & notch expand/collapse anims
-│   ├── Models/
-│   │   ├── AppSettings.swift          # UserDefaults persistence & SMAppService login helper
-│   │   └── TimerManager.swift         # 20-20-20 state machine, countdowns, idle/sleep/lock
-│   ├── Views/
-│   │   ├── NotchAlertView.swift       # Dynamic Island SwiftUI view, countdown ring & pulse
-│   │   └── SettingsView.swift         # SwiftUI Settings interface with presets & audio picker
-│   └── Utils/
-│       ├── IdleDetector.swift         # Quartz CGEventSource idle time detection
-│       ├── ScreenNotchDetector.swift  # Multi-screen & hardware notch geometry calculations
-│       └── SoundManager.swift         # NSSound audio chimes manager
-├── Resources/
-│   ├── Info.plist                     # LSUIElement = true, macOS 13+ metadata
-│   └── EyeBreak.entitlements          # App entitlements
-└── scripts/
-    ├── build_app.sh                   # Builds release binary, creates EyeBreak.app & signs
-    ├── trigger_test_alert.swift       # CLI utility to trigger notch alert via notification
-    └── verify_alert.swift             # Diagnostic tool inspecting active screen & notch metrics
-```
+- Native macOS `NSPanel`
+- Expands from the top of the screen
+- Smooth expand/collapse animation
+- Designed to resemble a Dynamic-Island-style experience
+- Non-activating window
+- Does not steal keyboard focus
+- Works without interrupting your current application
 
 ---
 
-## 📐 Notch Positioning Logic Explained
+### 📏 Screen Distance Awareness
 
-The positioning math is implemented in `Sources/Utils/ScreenNotchDetector.swift`:
+LookAway is designed to optionally use the Mac camera to provide **viewing-distance awareness**.
 
-1. **Detection**:
-   - `screen.safeAreaInsets.top` indicates whether the display has a camera notch. On modern MacBooks (M1/M2/M3/M4 Pro & Air), this value is ~32.0 to 36.0 pt.
-   - `screen.auxiliaryTopLeftArea` and `screen.auxiliaryTopRightArea` define the usable menu bar space on either side of the camera cutout.
-2. **Width & Origin**:
-   - `notchWidth = auxiliaryTopRightArea.minX - auxiliaryTopLeftArea.maxX` (~179 to 210 pt).
-   - `notchHeight = screen.safeAreaInsets.top`.
-   - Anchored at `x = screen.frame.midX - (notchWidth / 2)` and `y = screen.frame.maxY - notchHeight`.
-3. **Smooth Expansion**:
-   - When collapsed, the panel matches the notch dimensions.
-   - When expanded, the panel increases width to `max(notchWidth + 210, 430 pt)` and drops down to `notchHeight + 64 pt`, with continuous rounded bottom corners (`bottomRadius: 24 pt`).
-4. **Fallback**:
-   - For external monitors or notchless Macs, `safeAreaInsets.top == 0`. The app generates a sleek top-centered Dynamic Island pill.
+The planned distance guardian can:
+
+- Detect your face locally
+- Estimate relative viewing distance
+- Warn when you're sitting too close
+- Warn when you've moved too far away
+- Return to a safe state when you move back into range
+
+> This feature is intended as an awareness tool, not a medical diagnostic system.
 
 ---
 
-## 🚀 Building and Running
+### 🔒 Privacy by Design
 
-### Option 1: Double-click or Terminal Launch
-The app bundle is already built and ready in the repository root:
-```bash
-open EyeBreak.app
-```
+The distance-awareness system is designed around local processing.
 
-### Option 2: Build & Package from Source
-Run the provided build script:
-```bash
-./scripts/build_app.sh
-open EyeBreak.app
-```
-
-### Option 3: Open in Xcode
-Open the generated Xcode project:
-```bash
-open EyeBreak.xcodeproj
-```
-Select the `EyeBreak` target and click **Run (⌘R)**.
-
-To regenerate the Xcode project at any time:
-```bash
-xcodegen generate
-```
+- Camera processing happens on-device
+- No cloud computer vision
+- No remote image processing
+- Camera frames are not intended to be permanently stored
+- Distance awareness can be disabled from Settings
 
 ---
 
-## 🧪 Testing the Alerts
+### 💤 Smart Pause
 
-1. **From the Menu Bar**:
-   - Click the eye icon (`👁`) in your menu bar.
-   - Select **"Test Break Alert"** for the 20-20-20 countdown.
-   - Select **"Test Screen Distance Alert"** for the distance warning.
-2. **From Settings**:
-   - Open **Settings...** from the menu bar (`⌘,`).
-   - Click **"Test Screen Distance Alert"** or **"Test Break Alert"**.
-3. **From Terminal**:
-   ```bash
-   # Test 20-20-20 Eye Break alert
-   ./scripts/trigger_test_alert break
+LookAway understands that you aren't always actively using your Mac.
 
-   # Test Screen Distance alert
-   ./scripts/trigger_test_alert distance
+The timer can respond to:
 
-   # Open Settings
-   ./scripts/trigger_test_alert settings
-   ```
-   Or launch directly with the debug flag:
-   ```bash
-   open EyeBreak.app --args --test-distance-alert
-   ```
+- System sleep
+- Screen lock
+- User inactivity
+- System wake
+- Returning activity
+
+This prevents your break timer from continuing to behave as if you're working while you're actually away.
+
+---
+
+### 🎛️ Menu Bar Experience
+
+LookAway runs as a menu bar application.
+
+From the menu bar you can:
+
+- View time until the next break
+- Pause reminders
+- Resume reminders
+- Take a break immediately
+- Skip the current break
+- Open Settings
+- Test the break alert
+- Quit the application
+
+---
+
+### ⚙️ Customizable Settings
+
+Configure the experience around your workflow.
+
+Possible settings include:
+
+| Setting | Purpose |
+|---|---|
+| Work Interval | Time before a break |
+| Break Duration | Length of the break |
+| Sound | Enable or disable sounds |
+| Pause During Idle | Pause when you're away |
+| Launch at Login | Start automatically with macOS |
+| Distance Awareness | Enable / disable camera-based awareness |
+
+---
+
+## 🎬 Screenshots
+
+<div align="center">
+
+| Break Alert | Distance Warning | Safe Distance | Settings |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/assets/break.png" width="200" /> | <img src="docs/assets/too-close.png" width="200" /> | <img src="docs/assets/safe.png" width="200" /> | <img src="docs/assets/settings.png" width="200" /> |
+
+</div>
+
+---
+
+## 🚀 Quick Start
+
+### Requirements
+
+- macOS 13 or later
+- Xcode
+- Swift
+- Apple Silicon or Intel Mac
+
+### Clone the repository
+
+```bash
+git clone https://github.com/shiivu18/LookAway.git
+cd LookAway
