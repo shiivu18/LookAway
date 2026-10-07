@@ -97,6 +97,8 @@ public final class NotchWindowController: NSObject {
             timerManager: TimerManager.shared,
             screenDistanceManager: ScreenDistanceManager.shared,
             hasPhysicalNotch: metrics.hasPhysicalNotch,
+            notchHeight: metrics.notchHeight,
+            notchWidth: metrics.notchWidth,
             onDismiss: { [weak self] in
                 self?.dismiss()
             }

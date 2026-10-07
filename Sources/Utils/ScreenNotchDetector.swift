@@ -20,16 +20,16 @@ public struct NotchMetrics {
     /// Height of the expanded alert window.
     public let expandedHeight: CGFloat
     
-    /// Panel frame in screen coordinates when collapsed (anchored at top).
+    /// Panel frame in screen coordinates when collapsed (anchored at notch/top).
     public var collapsedFrame: NSRect {
-        let x = screen.frame.midX - (notchWidth / 2.0)
+        let x = notchRect.midX - (notchWidth / 2.0)
         let y = screen.frame.maxY - notchHeight
         return NSRect(x: x, y: y, width: notchWidth, height: notchHeight)
     }
     
     /// Panel frame in screen coordinates when fully expanded downward.
     public var expandedFrame: NSRect {
-        let x = screen.frame.midX - (expandedWidth / 2.0)
+        let x = notchRect.midX - (expandedWidth / 2.0)
         let y = screen.frame.maxY - expandedHeight
         return NSRect(x: x, y: y, width: expandedWidth, height: expandedHeight)
     }
@@ -70,7 +70,7 @@ public enum ScreenNotchDetector {
            let leftArea = screen.auxiliaryTopLeftArea,
            let rightArea = screen.auxiliaryTopRightArea,
            rightArea.minX > leftArea.maxX {
-            // Physical notch detected
+            // Physical notch detected (MacBook with camera/microphone cutout)
             hasNotch = true
             notchWidth = rightArea.minX - leftArea.maxX
             notchHeight = safeTop
@@ -89,10 +89,11 @@ public enum ScreenNotchDetector {
         }
         
         // Expanded alert dimensions:
-        // We ensure the expanded alert is wider than the notch (minimum 460pt)
-        // and expands downward with plenty of breathing room for the real-time distance meter and controls.
-        let expandedWidth = max(notchWidth + 240.0, 460.0)
-        let expandedHeight = notchHeight + 66.0 // ~98 to 104pt total height
+        // We ensure the expanded alert is wider than the notch (minimum 500pt)
+        // and expands downward with full clearance below the physical camera/microphone cutout.
+        let expandedWidth = max(notchWidth + 280.0, 500.0)
+        let visibleContentHeight: CGFloat = 74.0
+        let expandedHeight = (hasNotch ? notchHeight : 8.0) + visibleContentHeight
         
         return NotchMetrics(
             screen: screen,
