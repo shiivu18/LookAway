@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Combine
 
 /// A non-activating NSPanel that floats above everything without ever stealing keyboard focus.
 final class NonActivatingPanel: NSPanel {
@@ -17,8 +18,38 @@ public final class NotchWindowController: NSObject {
     private(set) var isVisible: Bool = false
     public private(set) var currentAlertType: NotchAlertType = .eyeBreak
 
+    private let settings = AppSettings.shared
+    private var cancellables = Set<AnyCancellable>()
+
     private override init() {
         super.init()
+        observeSettings()
+    }
+
+    private func observeSettings() {
+        Publishers.Merge3(
+            settings.$notchWidth,
+            settings.$notchContentHeight,
+            settings.$notchVerticalOffset
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] _ in
+            self?.updateLayoutIfVisible()
+        }
+        .store(in: &cancellables)
+    }
+
+    public func updateLayoutIfVisible() {
+        guard let panel = self.panel, isVisible else { return }
+        let screen = ScreenNotchDetector.targetScreen()
+        let metrics = ScreenNotchDetector.metrics(for: screen)
+        self.currentMetrics = metrics
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            panel.animator().setFrame(metrics.expandedFrame, display: true)
+        }
+        self.hostingView?.frame = NSRect(origin: .zero, size: metrics.expandedFrame.size)
     }
 
     /// Prepares or shows the notch alert window on the display containing the cursor.
@@ -97,6 +128,8 @@ public final class NotchWindowController: NSObject {
             timerManager: TimerManager.shared,
             screenDistanceManager: ScreenDistanceManager.shared,
             hasPhysicalNotch: metrics.hasPhysicalNotch,
+            notchHeight: metrics.notchHeight,
+            notchWidth: metrics.notchWidth,
             onDismiss: { [weak self] in
                 self?.dismiss()
             }

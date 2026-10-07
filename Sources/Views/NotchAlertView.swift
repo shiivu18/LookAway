@@ -63,7 +63,10 @@ public struct NotchAlertView: View {
     public var alertType: NotchAlertType
     @ObservedObject var timerManager: TimerManager
     @ObservedObject var screenDistanceManager: ScreenDistanceManager
+    @ObservedObject var settings: AppSettings = .shared
     public var hasPhysicalNotch: Bool
+    public var notchHeight: CGFloat
+    public var notchWidth: CGFloat
     public var onDismiss: () -> Void
 
     @ObservedObject private var viewModel: NotchAlertViewModel
@@ -72,14 +75,20 @@ public struct NotchAlertView: View {
         alertType: NotchAlertType = .eyeBreak,
         timerManager: TimerManager = .shared,
         screenDistanceManager: ScreenDistanceManager = .shared,
+        settings: AppSettings = .shared,
         hasPhysicalNotch: Bool = true,
+        notchHeight: CGFloat = 32.0,
+        notchWidth: CGFloat = 179.0,
         viewModel: NotchAlertViewModel = NotchAlertViewModel(),
         onDismiss: @escaping () -> Void = {}
     ) {
         self.alertType = alertType
         self.timerManager = timerManager
         self.screenDistanceManager = screenDistanceManager
+        self.settings = settings
         self.hasPhysicalNotch = hasPhysicalNotch
+        self.notchHeight = notchHeight
+        self.notchWidth = notchWidth
         self.viewModel = viewModel
         self.onDismiss = onDismiss
     }
@@ -109,27 +118,27 @@ public struct NotchAlertView: View {
     }
 
     public var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             // Background with notch curve & ultra-deep OLED black
             NotchShape(
-                bottomRadius: 24,
-                topRadius: hasPhysicalNotch ? 0 : 6
+                bottomRadius: 26,
+                topRadius: hasPhysicalNotch ? 0 : 8
             )
             .fill(Color.black)
             .overlay(
                 NotchShape(
-                    bottomRadius: 24,
-                    topRadius: hasPhysicalNotch ? 0 : 6
+                    bottomRadius: 26,
+                    topRadius: hasPhysicalNotch ? 0 : 8
                 )
                 .stroke(
                     LinearGradient(
                         colors: alertType.isDistanceType ? [
-                            distanceThemeColor.opacity(0.6),
-                            distanceThemeColor.opacity(0.25),
+                            distanceThemeColor.opacity(0.65),
+                            distanceThemeColor.opacity(0.30),
                             Color.white.opacity(0.12)
                         ] : [
                             Color.white.opacity(0.12),
-                            Color.teal.opacity(0.35),
+                            Color.teal.opacity(0.40),
                             Color.white.opacity(0.08)
                         ],
                         startPoint: .topLeading,
@@ -140,15 +149,27 @@ public struct NotchAlertView: View {
             )
             .shadow(
                 color: alertType.isDistanceType
-                    ? distanceThemeColor.opacity(0.38)
+                    ? distanceThemeColor.opacity(0.40)
                     : Color.teal.opacity(0.35),
                 radius: 14,
                 x: 0,
                 y: 6
             )
 
-            // Content container
-            HStack(spacing: 14) {
+            // Content container strictly cleared below the hardware camera and microphone
+            VStack(spacing: 0) {
+                if hasPhysicalNotch {
+                    // Physical Camera & Microphone Cutout Zone:
+                    // Reserved transparent spacer + user custom vertical offset
+                    Color.clear
+                        .frame(height: notchHeight + CGFloat(settings.notchVerticalOffset))
+                }
+
+                // Interactive UI Area — 100% visible on screen below the camera and mic
+                HStack(spacing: settings.notchElementAlignment == "center" ? 18 : 14) {
+                    if settings.notchElementAlignment == "center" {
+                        Spacer(minLength: 6)
+                    }
                 // Left Icon: Animated Glowing Symbol
                 ZStack {
                     Circle()
@@ -307,9 +328,17 @@ public struct NotchAlertView: View {
                         .padding(.trailing, 16)
                     }
                 }
+
+                if settings.notchElementAlignment == "center" || settings.notchElementAlignment == "leading" {
+                    Spacer(minLength: 6)
+                }
             }
-            .padding(.top, hasPhysicalNotch ? 6 : 2)
-            .padding(.bottom, 6)
+            .scaleEffect(CGFloat(settings.notchElementScale))
+            .animation(.spring(response: 0.28, dampingFraction: 0.8), value: settings.notchElementScale)
+            .animation(.spring(response: 0.28, dampingFraction: 0.8), value: settings.notchElementAlignment)
+            .frame(maxHeight: .infinity)
+            .padding(.top, hasPhysicalNotch ? 4 : 8)
+            .padding(.bottom, hasPhysicalNotch ? 8 : 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
@@ -318,6 +347,7 @@ public struct NotchAlertView: View {
             }
         }
     }
+}
 
     // MARK: - Subviews
 
