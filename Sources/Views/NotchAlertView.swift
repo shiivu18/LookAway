@@ -63,6 +63,7 @@ public struct NotchAlertView: View {
     public var alertType: NotchAlertType
     @ObservedObject var timerManager: TimerManager
     @ObservedObject var screenDistanceManager: ScreenDistanceManager
+    @ObservedObject var settings: AppSettings = .shared
     public var hasPhysicalNotch: Bool
     public var notchHeight: CGFloat
     public var notchWidth: CGFloat
@@ -74,6 +75,7 @@ public struct NotchAlertView: View {
         alertType: NotchAlertType = .eyeBreak,
         timerManager: TimerManager = .shared,
         screenDistanceManager: ScreenDistanceManager = .shared,
+        settings: AppSettings = .shared,
         hasPhysicalNotch: Bool = true,
         notchHeight: CGFloat = 32.0,
         notchWidth: CGFloat = 179.0,
@@ -83,6 +85,7 @@ public struct NotchAlertView: View {
         self.alertType = alertType
         self.timerManager = timerManager
         self.screenDistanceManager = screenDistanceManager
+        self.settings = settings
         self.hasPhysicalNotch = hasPhysicalNotch
         self.notchHeight = notchHeight
         self.notchWidth = notchWidth
@@ -157,13 +160,16 @@ public struct NotchAlertView: View {
             VStack(spacing: 0) {
                 if hasPhysicalNotch {
                     // Physical Camera & Microphone Cutout Zone:
-                    // Reserved transparent spacer so no UI element is ever obscured by the hardware bezel
+                    // Reserved transparent spacer + user custom vertical offset
                     Color.clear
-                        .frame(height: notchHeight)
+                        .frame(height: notchHeight + CGFloat(settings.notchVerticalOffset))
                 }
 
                 // Interactive UI Area — 100% visible on screen below the camera and mic
-                HStack(spacing: 14) {
+                HStack(spacing: settings.notchElementAlignment == "center" ? 18 : 14) {
+                    if settings.notchElementAlignment == "center" {
+                        Spacer(minLength: 6)
+                    }
                 // Left Icon: Animated Glowing Symbol
                 ZStack {
                     Circle()
@@ -322,7 +328,14 @@ public struct NotchAlertView: View {
                         .padding(.trailing, 16)
                     }
                 }
+
+                if settings.notchElementAlignment == "center" || settings.notchElementAlignment == "leading" {
+                    Spacer(minLength: 6)
+                }
             }
+            .scaleEffect(CGFloat(settings.notchElementScale))
+            .animation(.spring(response: 0.28, dampingFraction: 0.8), value: settings.notchElementScale)
+            .animation(.spring(response: 0.28, dampingFraction: 0.8), value: settings.notchElementAlignment)
             .frame(maxHeight: .infinity)
             .padding(.top, hasPhysicalNotch ? 4 : 8)
             .padding(.bottom, hasPhysicalNotch ? 8 : 8)
