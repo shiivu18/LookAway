@@ -12,6 +12,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     private var statusMenuItem: NSMenuItem?
     private var pauseResumeMenuItem: NSMenuItem?
     private var skipMenuItem: NSMenuItem?
+    private var notchDistanceMenuItem: NSMenuItem?
 
     private let timerManager = TimerManager.shared
     private var cancellables = Set<AnyCancellable>()
@@ -83,7 +84,17 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         testAlertItem.target = self
         newMenu.addItem(testAlertItem)
 
-        // 6. Debug: Test Screen Distance Alert
+        // 6. Show / Hide Distance in Notch
+        let notchDistanceItem = NSMenuItem(
+            title: "Show Distance in Notch",
+            action: #selector(toggleDistanceNotchAction),
+            keyEquivalent: "n"
+        )
+        notchDistanceItem.target = self
+        newMenu.addItem(notchDistanceItem)
+        self.notchDistanceMenuItem = notchDistanceItem
+
+        // 7. Debug: Test Screen Distance Alert
         let testDistanceItem = NSMenuItem(
             title: "Test Screen Distance Alert",
             action: #selector(testDistanceAlertAction),
@@ -92,7 +103,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         testDistanceItem.target = self
         newMenu.addItem(testDistanceItem)
 
-        // 7. Settings
+        // 8. Settings
         let settingsItem = NSMenuItem(
             title: "Settings...",
             action: #selector(openSettingsAction),
@@ -103,7 +114,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
 
         newMenu.addItem(NSMenuItem.separator())
 
-        // 7. Quit
+        // 9. Quit
         let quitItem = NSMenuItem(
             title: "Quit EyeBreak",
             action: #selector(quitAction),
@@ -152,6 +163,12 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
             statusItem?.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: "EyeBreak")
         }
         statusItem?.button?.image?.isTemplate = true
+
+        if NotchWindowController.shared.isVisible && NotchWindowController.shared.currentAlertType == .liveDistanceHUD {
+            notchDistanceMenuItem?.title = "Hide Distance in Notch"
+        } else {
+            notchDistanceMenuItem?.title = "Show Distance in Notch"
+        }
     }
 
     // MARK: - NSMenuDelegate
@@ -176,6 +193,10 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
 
     @objc private func testAlertAction() {
         timerManager.testAlert()
+    }
+
+    @objc private func toggleDistanceNotchAction() {
+        NotchWindowController.shared.toggleLiveDistanceHUD()
     }
 
     @objc private func testDistanceAlertAction() {

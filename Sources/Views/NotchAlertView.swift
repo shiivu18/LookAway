@@ -3,6 +3,11 @@ import SwiftUI
 public enum NotchAlertType: Equatable {
     case eyeBreak
     case screenDistance
+    case liveDistanceHUD
+
+    public var isDistanceType: Bool {
+        self == .screenDistance || self == .liveDistanceHUD
+    }
 }
 
 public final class NotchAlertViewModel: ObservableObject {
@@ -85,6 +90,24 @@ public struct NotchAlertView: View {
         return min(max(remaining / total, 0.0), 1.0)
     }
 
+    private var distanceThemeColor: Color {
+        guard screenDistanceManager.hasDetectedFace else {
+            return Color.white.opacity(0.5)
+        }
+        switch screenDistanceManager.distanceZone {
+        case .tooClose:
+            return Color.orange
+        case .caution:
+            return Color.yellow
+        case .safe:
+            return Color.green
+        case .far:
+            return Color.cyan
+        case .unknown:
+            return Color.white.opacity(0.5)
+        }
+    }
+
     public var body: some View {
         ZStack {
             // Background with notch curve & ultra-deep OLED black
@@ -100,13 +123,13 @@ public struct NotchAlertView: View {
                 )
                 .stroke(
                     LinearGradient(
-                        colors: alertType == .screenDistance ? (
-                            screenDistanceManager.isTooClose
-                            ? [Color.orange.opacity(0.55), Color.red.opacity(0.35), Color.white.opacity(0.12)]
-                            : [Color.green.opacity(0.55), Color.mint.opacity(0.35), Color.white.opacity(0.12)]
-                        ) : [
+                        colors: alertType.isDistanceType ? [
+                            distanceThemeColor.opacity(0.6),
+                            distanceThemeColor.opacity(0.25),
+                            Color.white.opacity(0.12)
+                        ] : [
                             Color.white.opacity(0.12),
-                            Color.teal.opacity(0.25),
+                            Color.teal.opacity(0.35),
                             Color.white.opacity(0.08)
                         ],
                         startPoint: .topLeading,
@@ -116,9 +139,9 @@ public struct NotchAlertView: View {
                 )
             )
             .shadow(
-                color: alertType == .screenDistance
-                    ? (screenDistanceManager.isTooClose ? Color.orange.opacity(0.4) : Color.green.opacity(0.35))
-                    : Color.black.opacity(0.65),
+                color: alertType.isDistanceType
+                    ? distanceThemeColor.opacity(0.38)
+                    : Color.teal.opacity(0.35),
                 radius: 14,
                 x: 0,
                 y: 6
@@ -132,8 +155,8 @@ public struct NotchAlertView: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    (alertType == .screenDistance
-                                     ? (screenDistanceManager.isTooClose ? Color.orange : Color.green)
+                                    (alertType.isDistanceType
+                                     ? distanceThemeColor
                                      : Color.teal).opacity(0.35),
                                     Color.clear
                                 ],
@@ -142,25 +165,23 @@ public struct NotchAlertView: View {
                                 endRadius: 22
                             )
                         )
-                        .scaleEffect(viewModel.isPulsing ? 1.25 : 0.95)
+                        .scaleEffect(viewModel.isPulsing ? 1.22 : 0.95)
                         .frame(width: 44, height: 44)
 
-                    Image(systemName: alertType == .screenDistance
-                          ? (screenDistanceManager.isTooClose ? "person.fill.viewfinder" : "checkmark.circle.fill")
-                          : "eye.fill")
+                    Image(systemName: leftIconName)
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: alertType == .screenDistance
-                                    ? (screenDistanceManager.isTooClose ? [Color.orange, Color.yellow] : [Color.green, Color.mint])
+                                colors: alertType.isDistanceType
+                                    ? [distanceThemeColor, distanceThemeColor.opacity(0.8)]
                                     : [Color.teal, Color.mint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .shadow(
-                            color: (alertType == .screenDistance
-                                    ? (screenDistanceManager.isTooClose ? Color.orange : Color.green)
+                            color: (alertType.isDistanceType
+                                    ? distanceThemeColor
                                     : Color.teal).opacity(0.8),
                             radius: 6,
                             x: 0,
@@ -170,147 +191,64 @@ public struct NotchAlertView: View {
                 .padding(.leading, 16)
 
                 // Middle Content
-                if alertType == .screenDistance {
-                    // Real-time Screen Distance View with Live Distance Meter
-                    VStack(alignment: .leading, spacing: 4) {
-                        // Title with live numbers
-                        HStack(spacing: 6) {
-                            Text(screenDistanceManager.isTooClose ? "Sit Back:" : "Safe Distance:")
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-
-                            Text("\(screenDistanceManager.displayDistanceInches)\"")
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
-                                .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
-                                .monospacedDigit()
-
-                            Text("(\(screenDistanceManager.displayDistanceCm) cm)")
-                                .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .foregroundColor(Color(white: 0.65))
-
-                            Text(screenDistanceManager.isTooClose ? "• Target: 20\"+" : "• Perfect 👍")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundColor(screenDistanceManager.isTooClose ? .orange.opacity(0.9) : .green)
-                        }
-
-                        // Live Real-Time Distance Meter Bar
-                        VStack(spacing: 3) {
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    // Background track
-                                    Capsule()
-                                        .fill(Color.white.opacity(0.12))
-                                        .frame(height: 6)
-
-                                    // Dynamic filled track
-                                    Capsule()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color.red,
-                                                    Color.orange,
-                                                    Color.yellow,
-                                                    Color.green
-                                                ],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .frame(
-                                            width: max(8, geo.size.width * CGFloat(screenDistanceManager.distanceProgressRatio)),
-                                            height: 6
-                                        )
-                                        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: screenDistanceManager.distanceProgressRatio)
-
-                                    // Target marker at 20 inches (~75% of 8"->24" range)
-                                    Rectangle()
-                                        .fill(Color.white.opacity(0.7))
-                                        .frame(width: 2, height: 10)
-                                        .offset(x: geo.size.width * 0.75 - 1, y: -2)
-                                }
-                            }
-                            .frame(height: 8)
-
-                            // Gauge scale labels
-                            HStack {
-                                Text("8\" (Too Close)")
-                                    .font(.system(size: 8.5, weight: .medium))
-                                    .foregroundColor(Color(white: 0.5))
-
-                                Spacer()
-
-                                Text("Arm's Length (20\"+)")
-                                    .font(.system(size: 8.5, weight: .bold))
-                                    .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
-
-                                Spacer()
-
-                                Text("24\"+ (Safe)")
-                                    .font(.system(size: 8.5, weight: .medium))
-                                    .foregroundColor(Color(white: 0.5))
-                            }
-                        }
-                    }
+                if alertType.isDistanceType {
+                    distanceContentView
                 } else {
-                    // EyeBreak 20-20-20 View
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
-                            Text("Look 20 feet away")
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-
-                            Text("• 20-20-20")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundColor(.teal.opacity(0.9))
-                        }
-
-                        Text("Rest your eyes on a distant object or horizon")
-                            .font(.system(size: 11, weight: .medium, design: .default))
-                            .foregroundColor(Color(white: 0.72))
-                            .lineLimit(1)
-                    }
+                    eyeBreakContentView
                 }
 
                 Spacer(minLength: 4)
 
                 // Right Side Controls
                 HStack(spacing: 10) {
-                    if alertType == .screenDistance {
+                    if alertType.isDistanceType {
                         // Digital badge readout
                         VStack(spacing: 1) {
-                            Text("\(screenDistanceManager.displayDistanceInches)\"")
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
-                                .monospacedDigit()
+                            if screenDistanceManager.hasDetectedFace {
+                                Text("\(screenDistanceManager.displayDistanceInches)\"")
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundColor(distanceThemeColor)
+                                    .monospacedDigit()
 
-                            Text(screenDistanceManager.isTooClose ? "TOO NEAR" : "SAFE ✓")
-                                .font(.system(size: 8.5, weight: .black, design: .monospaced))
-                                .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
+                                Text(badgeStatusText)
+                                    .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                                    .foregroundColor(distanceThemeColor)
+                            } else {
+                                Text("--\"")
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundColor(Color(white: 0.5))
+
+                                Text("WAITING")
+                                    .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                                    .foregroundColor(Color(white: 0.5))
+                            }
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill((screenDistanceManager.isTooClose ? Color.orange : Color.green).opacity(0.16))
+                                .fill(distanceThemeColor.opacity(0.16))
                         )
 
-                        // Dismiss button
+                        // Close / Dismiss button
                         Button(action: {
-                            screenDistanceManager.dismissAlertManually()
+                            if alertType == .screenDistance {
+                                screenDistanceManager.dismissAlertManually()
+                            }
                             onDismiss()
                         }) {
-                            HStack(spacing: 2) {
+                            HStack(spacing: 3) {
                                 Image(systemName: "xmark")
                                     .font(.system(size: 9, weight: .bold))
-                                Text("Dismiss")
+                                Text(alertType == .liveDistanceHUD ? "Close" : "Dismiss")
                                     .font(.system(size: 10, weight: .semibold))
                             }
-                            .foregroundColor(viewModel.isHoveringAction ? .white : Color(white: 0.7))
+                            .foregroundColor(viewModel.isHoveringAction ? .white : Color(white: 0.72))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 5)
                             .background(
                                 Capsule()
-                                    .fill(viewModel.isHoveringAction ? Color.white.opacity(0.18) : Color.white.opacity(0.08))
+                                    .fill(viewModel.isHoveringAction ? Color.white.opacity(0.2) : Color.white.opacity(0.08))
                             )
                         }
                         .buttonStyle(.plain)
@@ -375,9 +313,200 @@ public struct NotchAlertView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                 viewModel.isPulsing = true
             }
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var distanceContentView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            // Header with live distance readouts
+            HStack(spacing: 6) {
+                if screenDistanceManager.hasDetectedFace {
+                    Text(titleText)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+
+                    Text("\(screenDistanceManager.displayDistanceInches)\"")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundColor(distanceThemeColor)
+                        .monospacedDigit()
+
+                    Text("(\(screenDistanceManager.displayDistanceCm) cm)")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundColor(Color(white: 0.65))
+
+                    Text(targetStatusText)
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundColor(distanceThemeColor)
+                } else {
+                    Text("👤 Looking for Person")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+
+                    Text("• Center yourself in notch view")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundColor(Color(white: 0.65))
+                }
+            }
+
+            // Calibrated Distance Meter Bar with Live Position Indicator
+            VStack(spacing: 3) {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        // Background track with colored ergonomic zones
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color.white.opacity(0.10))
+                                .frame(height: 6)
+
+                            // Segmented gradient track: Red (<16") -> Yellow/Orange (16-20") -> Green (20-30") -> Cyan (30"+)
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        stops: [
+                                            .init(color: Color.red.opacity(0.85), location: 0.0),
+                                            .init(color: Color.orange, location: 0.25),
+                                            .init(color: Color.yellow, location: 0.38),
+                                            .init(color: Color.green, location: 0.50),
+                                            .init(color: Color.mint, location: 0.75),
+                                            .init(color: Color.cyan, location: 1.0)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(height: 6)
+                                .opacity(0.85)
+                        }
+
+                        // Target reference marker at 20 inches: (20 - 10) / (34 - 10) = 41.7%
+                        Rectangle()
+                            .fill(Color.white)
+                            .frame(width: 2, height: 11)
+                            .offset(x: geo.size.width * 0.417 - 1, y: -2.5)
+                            .shadow(color: .white.opacity(0.8), radius: 2)
+
+                        // Live Glowing Position Indicator Needle / Puck
+                        if screenDistanceManager.hasDetectedFace {
+                            let puckX = max(4, min(geo.size.width - 12, geo.size.width * CGFloat(screenDistanceManager.distanceProgressRatio) - 5))
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 10, height: 10)
+                                .overlay(
+                                    Circle()
+                                        .stroke(distanceThemeColor, lineWidth: 2)
+                                )
+                                .shadow(color: distanceThemeColor.opacity(0.9), radius: 5)
+                                .offset(x: puckX, y: -2)
+                                .animation(.spring(response: 0.26, dampingFraction: 0.82), value: screenDistanceManager.distanceProgressRatio)
+                        }
+                    }
+                }
+                .frame(height: 8)
+
+                // Gauge scale markings
+                HStack {
+                    Text("10\" (Too Close)")
+                        .font(.system(size: 8.5, weight: .medium))
+                        .foregroundColor(Color(white: 0.5))
+
+                    Spacer()
+
+                    Text("20\" Target (Arm's Length)")
+                        .font(.system(size: 8.5, weight: .bold))
+                        .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
+
+                    Spacer()
+
+                    Text("34\"+ (Safe)")
+                        .font(.system(size: 8.5, weight: .medium))
+                        .foregroundColor(Color(white: 0.5))
+                }
+            }
+        }
+    }
+
+    private var eyeBreakContentView: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text("Look 20 feet away")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                Text("• 20-20-20")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundColor(.teal.opacity(0.9))
+            }
+
+            Text("Rest your eyes on a distant object or horizon")
+                .font(.system(size: 11, weight: .medium, design: .default))
+                .foregroundColor(Color(white: 0.72))
+                .lineLimit(1)
+        }
+    }
+
+    // MARK: - Text Helpers
+
+    private var leftIconName: String {
+        if alertType == .eyeBreak {
+            return "eye.fill"
+        }
+        guard screenDistanceManager.hasDetectedFace else {
+            return "viewfinder"
+        }
+        switch screenDistanceManager.distanceZone {
+        case .tooClose:
+            return "person.fill.viewfinder"
+        case .caution:
+            return "exclamationmark.circle.fill"
+        case .safe:
+            return "checkmark.circle.fill"
+        case .far:
+            return "person.fill.checkmark"
+        case .unknown:
+            return "viewfinder"
+        }
+    }
+
+    private var titleText: String {
+        if alertType == .liveDistanceHUD {
+            return screenDistanceManager.isTooClose ? "⚠️ Sitting Too Close:" : "📏 Person Distance:"
+        } else {
+            return screenDistanceManager.isTooClose ? "⚠️ Sit Back:" : "✅ Safe Distance:"
+        }
+    }
+
+    private var targetStatusText: String {
+        switch screenDistanceManager.distanceZone {
+        case .tooClose:
+            return "• Target: 20\"+"
+        case .caution:
+            return "• Lean Back Slightly"
+        case .safe:
+            return "• Optimal Posture 👍"
+        case .far:
+            return "• Relaxed Distance"
+        case .unknown:
+            return ""
+        }
+    }
+
+    private var badgeStatusText: String {
+        switch screenDistanceManager.distanceZone {
+        case .tooClose:
+            return "TOO NEAR"
+        case .caution:
+            return "CAUTION"
+        case .safe:
+            return "SAFE ✓"
+        case .far:
+            return "FAR"
+        case .unknown:
+            return "SEARCHING"
         }
     }
 }

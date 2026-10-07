@@ -30,10 +30,26 @@ public final class NotchWindowController: NSObject {
         }
     }
 
+    /// Toggles the live distance inspection HUD in the notch.
+    public func toggleLiveDistanceHUD() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if self.isVisible && self.currentAlertType == .liveDistanceHUD {
+                self.dismiss()
+            } else {
+                ScreenDistanceManager.shared.setLiveHUDActive(true)
+                self.show(alertType: .liveDistanceHUD)
+            }
+        }
+    }
+
     /// Dismisses the notch alert with a smooth collapse animation back into the notch.
     public func dismiss() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            if self.currentAlertType == .liveDistanceHUD {
+                ScreenDistanceManager.shared.setLiveHUDActive(false)
+            }
             self.collapseAndHide()
         }
     }

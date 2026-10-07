@@ -58,10 +58,10 @@ public struct SettingsView: View {
                 VStack(spacing: 20) {
                     // Screen Distance Section (Stay Far from Screen)
                     GroupBox(label: Label("Screen Distance (Stay Far from Screen)", systemImage: "person.fill.viewfinder")) {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 14) {
                             Toggle("Warn when sitting too close to the screen", isOn: $settings.screenDistanceEnabled)
 
-                            Text("Uses on-device Vision face detection to check when you're leaning closer than an arm's length (~20 inches / 50 cm). Frames are processed in-memory and never stored.")
+                            Text("Uses on-device Vision facial landmark tracking (Interpupillary Distance) and camera optics to accurately measure the distance to the person sitting at the screen. Frames are processed locally in-memory and never saved.")
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -69,41 +69,133 @@ public struct SettingsView: View {
                             if settings.screenDistanceEnabled {
                                 Divider()
 
-                                // Sensitivity Slider & Presets
+                                // Live Real-Time Distance Monitor Card
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text("Live Distance Monitor:")
+                                            .font(.system(size: 12, weight: .semibold))
+                                        Spacer()
+                                        if screenDistanceManager.hasDetectedFace {
+                                            HStack(spacing: 4) {
+                                                Circle().fill(screenDistanceManager.isTooClose ? Color.orange : Color.green).frame(width: 7, height: 7)
+                                                Text(screenDistanceManager.distanceZone.title)
+                                                    .font(.system(size: 11, weight: .bold))
+                                                    .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
+                                            }
+                                        } else {
+                                            Text("Waiting for person...")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    HStack(spacing: 12) {
+                                        // Number badge
+                                        VStack(alignment: .leading, spacing: 1) {
+                                            if screenDistanceManager.hasDetectedFace {
+                                                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                                    Text("\(screenDistanceManager.displayDistanceInches)\"")
+                                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                                        .foregroundColor(screenDistanceManager.isTooClose ? .orange : .green)
+                                                        .monospacedDigit()
+                                                    Text("(\(screenDistanceManager.displayDistanceCm) cm)")
+                                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                                        .foregroundColor(.secondary)
+                                                }
+                                            } else {
+                                                Text("--\"")
+                                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+
+                                        Spacer()
+
+                                        // Toggle Notch HUD Button
+                                        Button(action: {
+                                            NotchWindowController.shared.toggleLiveDistanceHUD()
+                                        }) {
+                                            Label("Show in Notch", systemImage: "macwindow.badge.plus")
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .controlSize(.small)
+                                        .tint(.accentColor)
+                                    }
+                                    .padding(10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(Color(NSColor.controlBackgroundColor))
+                                    )
+                                }
+
+                                Divider()
+
+                                // Sensitivity / Alert Threshold
                                 VStack(alignment: .leading, spacing: 6) {
                                     HStack {
-                                        Text("Alert Sensitivity:")
+                                        Text("Alert Threshold:")
                                             .fontWeight(.medium)
                                         Spacer()
-                                        Text(sensitivityDescription(settings.screenDistanceSensitivity))
+                                        Text("\(Int(settings.targetDistanceThresholdInches))\" (\(Int(settings.targetDistanceThresholdInches * 2.54)) cm)")
                                             .foregroundColor(.secondary)
                                             .font(.subheadline)
                                     }
 
-                                    Slider(value: $settings.screenDistanceSensitivity, in: 0.30...0.55, step: 0.02)
+                                    Slider(value: $settings.targetDistanceThresholdInches, in: 14.0...22.0, step: 1.0)
 
                                     HStack(spacing: 8) {
-                                        Button("Relaxed") {
+                                        Button("Relaxed (15\")") {
+                                            settings.targetDistanceThresholdInches = 15.0
                                             settings.screenDistanceSensitivity = 0.50
                                         }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
-                                        .tint(settings.screenDistanceSensitivity == 0.50 ? .accentColor : nil)
+                                        .tint(settings.targetDistanceThresholdInches == 15.0 ? .accentColor : nil)
 
-                                        Button("Normal") {
+                                        Button("Normal (18\")") {
+                                            settings.targetDistanceThresholdInches = 18.0
                                             settings.screenDistanceSensitivity = 0.42
                                         }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
-                                        .tint(settings.screenDistanceSensitivity == 0.42 ? .accentColor : nil)
+                                        .tint(settings.targetDistanceThresholdInches == 18.0 ? .accentColor : nil)
 
-                                        Button("Strict") {
+                                        Button("Strict (20\")") {
+                                            settings.targetDistanceThresholdInches = 20.0
                                             settings.screenDistanceSensitivity = 0.35
                                         }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
-                                        .tint(settings.screenDistanceSensitivity == 0.35 ? .accentColor : nil)
+                                        .tint(settings.targetDistanceThresholdInches == 20.0 ? .accentColor : nil)
                                     }
+                                }
+
+                                Divider()
+
+                                // Calibration Fine-Tuning Slider
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Text("Distance Calibration:")
+                                            .fontWeight(.medium)
+                                        Spacer()
+                                        Text(String(format: "%.0f%%", settings.distanceCalibrationFactor * 100))
+                                            .foregroundColor(.secondary)
+                                            .font(.subheadline)
+                                        if abs(settings.distanceCalibrationFactor - 1.0) > 0.01 {
+                                            Button("Reset") {
+                                                settings.distanceCalibrationFactor = 1.0
+                                            }
+                                            .buttonStyle(.plain)
+                                            .font(.caption)
+                                            .foregroundColor(.accentColor)
+                                        }
+                                    }
+
+                                    Slider(value: $settings.distanceCalibrationFactor, in: 0.80...1.25, step: 0.02)
+
+                                    Text("Fine-tune if your camera lens angle or sitting posture reads differently.")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.secondary)
                                 }
 
                                 Divider()
@@ -113,7 +205,7 @@ public struct SettingsView: View {
                                     Text("Camera Status:")
                                     Spacer()
                                     switch screenDistanceManager.permissionStatus {
-                                    case .authorized:
+                                     case .authorized:
                                         HStack(spacing: 4) {
                                             Circle().fill(Color.green).frame(width: 8, height: 8)
                                             Text(screenDistanceManager.isMonitoring ? "Active & Monitoring" : "Ready")
@@ -143,7 +235,7 @@ public struct SettingsView: View {
                                     Button(action: {
                                         screenDistanceManager.testDistanceAlert()
                                     }) {
-                                        Label("Test Screen Distance Alert", systemImage: "exclamationmark.triangle")
+                                        Label("Test Alert in Notch", systemImage: "exclamationmark.triangle")
                                     }
                                     .buttonStyle(.bordered)
                                     .tint(.orange)

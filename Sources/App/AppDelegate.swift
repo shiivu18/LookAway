@@ -54,6 +54,14 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             MenuBarController.shared.openSettingsAction()
         }
 
+        DistributedNotificationCenter.default().addObserver(
+            forName: NSNotification.Name("com.eyebreak.toggleNotchDistance"),
+            object: nil,
+            queue: .main
+        ) { _ in
+            NotchWindowController.shared.toggleLiveDistanceHUD()
+        }
+
         // Check if launched with debug CLI flags
         if CommandLine.arguments.contains("--test-alert") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -63,6 +71,11 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--test-distance-alert") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 ScreenDistanceManager.shared.testDistanceAlert()
+            }
+        }
+        if CommandLine.arguments.contains("--show-notch-distance") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                NotchWindowController.shared.toggleLiveDistanceHUD()
             }
         }
     }

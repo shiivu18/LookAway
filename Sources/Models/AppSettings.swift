@@ -16,6 +16,8 @@ public final class AppSettings: ObservableObject {
         static let screenDistanceEnabled = "screenDistanceEnabled"
         static let screenDistanceSensitivity = "screenDistanceSensitivity"
         static let screenDistanceWarningSeconds = "screenDistanceWarningSeconds"
+        static let distanceCalibrationFactor = "distanceCalibrationFactor"
+        static let targetDistanceThresholdInches = "targetDistanceThresholdInches"
     }
 
     private let defaults: UserDefaults
@@ -53,11 +55,29 @@ public final class AppSettings: ObservableObject {
     }
 
     @Published public var screenDistanceSensitivity: Double {
-        didSet { defaults.set(screenDistanceSensitivity, forKey: Keys.screenDistanceSensitivity) }
+        didSet {
+            defaults.set(screenDistanceSensitivity, forKey: Keys.screenDistanceSensitivity)
+            // Sync threshold inches to sensitivity preset
+            if screenDistanceSensitivity >= 0.48 {
+                targetDistanceThresholdInches = 15.0
+            } else if screenDistanceSensitivity <= 0.38 {
+                targetDistanceThresholdInches = 20.0
+            } else {
+                targetDistanceThresholdInches = 18.0
+            }
+        }
     }
 
     @Published public var screenDistanceWarningSeconds: Double {
         didSet { defaults.set(screenDistanceWarningSeconds, forKey: Keys.screenDistanceWarningSeconds) }
+    }
+
+    @Published public var distanceCalibrationFactor: Double {
+        didSet { defaults.set(distanceCalibrationFactor, forKey: Keys.distanceCalibrationFactor) }
+    }
+
+    @Published public var targetDistanceThresholdInches: Double {
+        didSet { defaults.set(targetDistanceThresholdInches, forKey: Keys.targetDistanceThresholdInches) }
     }
 
     @Published public var launchAtLogin: Bool = false
@@ -88,7 +108,9 @@ public final class AppSettings: ObservableObject {
             Keys.idleThresholdMinutes: 5.0,
             Keys.screenDistanceEnabled: true,
             Keys.screenDistanceSensitivity: 0.42,
-            Keys.screenDistanceWarningSeconds: 3.0
+            Keys.screenDistanceWarningSeconds: 3.0,
+            Keys.distanceCalibrationFactor: 1.0,
+            Keys.targetDistanceThresholdInches: 18.0
         ])
 
         self.workIntervalMinutes = defaults.double(forKey: Keys.workIntervalMinutes)
@@ -101,6 +123,12 @@ public final class AppSettings: ObservableObject {
         self.screenDistanceEnabled = defaults.bool(forKey: Keys.screenDistanceEnabled)
         self.screenDistanceSensitivity = defaults.double(forKey: Keys.screenDistanceSensitivity)
         self.screenDistanceWarningSeconds = defaults.double(forKey: Keys.screenDistanceWarningSeconds)
+
+        let savedCal = defaults.double(forKey: Keys.distanceCalibrationFactor)
+        self.distanceCalibrationFactor = savedCal > 0.0 ? savedCal : 1.0
+
+        let savedThreshold = defaults.double(forKey: Keys.targetDistanceThresholdInches)
+        self.targetDistanceThresholdInches = savedThreshold > 0.0 ? savedThreshold : 18.0
 
         checkLaunchAtLoginStatus()
     }
