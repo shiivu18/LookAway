@@ -89,11 +89,13 @@ public enum ScreenNotchDetector {
         }
         
         // Expanded alert dimensions:
-        // We ensure the expanded alert is wider than the notch (minimum 500pt)
-        // and expands downward with full clearance below the physical camera/microphone cutout.
-        let expandedWidth = max(notchWidth + 280.0, 500.0)
-        let visibleContentHeight: CGFloat = 74.0
-        let expandedHeight = (hasNotch ? notchHeight : 8.0) + visibleContentHeight
+        // Reads customizable notch dimensions and clearance from AppSettings
+        let settings = AppSettings.shared
+        let customWidth = max(settings.notchWidth, notchWidth + 120.0)
+        let visibleContentHeight = settings.notchContentHeight
+        let verticalOffset = settings.notchVerticalOffset
+        let expandedHeight = (hasNotch ? (notchHeight + verticalOffset) : 8.0) + visibleContentHeight
+        let expandedWidth = customWidth
         
         return NotchMetrics(
             screen: screen,

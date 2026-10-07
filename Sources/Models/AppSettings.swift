@@ -18,6 +18,11 @@ public final class AppSettings: ObservableObject {
         static let screenDistanceWarningSeconds = "screenDistanceWarningSeconds"
         static let distanceCalibrationFactor = "distanceCalibrationFactor"
         static let targetDistanceThresholdInches = "targetDistanceThresholdInches"
+        static let notchWidth = "notchWidth"
+        static let notchContentHeight = "notchContentHeight"
+        static let notchElementScale = "notchElementScale"
+        static let notchElementAlignment = "notchElementAlignment"
+        static let notchVerticalOffset = "notchVerticalOffset"
     }
 
     private let defaults: UserDefaults
@@ -80,6 +85,26 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(targetDistanceThresholdInches, forKey: Keys.targetDistanceThresholdInches) }
     }
 
+    @Published public var notchWidth: Double {
+        didSet { defaults.set(notchWidth, forKey: Keys.notchWidth) }
+    }
+
+    @Published public var notchContentHeight: Double {
+        didSet { defaults.set(notchContentHeight, forKey: Keys.notchContentHeight) }
+    }
+
+    @Published public var notchElementScale: Double {
+        didSet { defaults.set(notchElementScale, forKey: Keys.notchElementScale) }
+    }
+
+    @Published public var notchElementAlignment: String {
+        didSet { defaults.set(notchElementAlignment, forKey: Keys.notchElementAlignment) }
+    }
+
+    @Published public var notchVerticalOffset: Double {
+        didSet { defaults.set(notchVerticalOffset, forKey: Keys.notchVerticalOffset) }
+    }
+
     @Published public var launchAtLogin: Bool = false
 
     public var workIntervalSeconds: Int {
@@ -92,6 +117,14 @@ public final class AppSettings: ObservableObject {
 
     public var idleThresholdSeconds: Double {
         idleThresholdMinutes * 60
+    }
+
+    public func resetNotchAppearance() {
+        self.notchWidth = 500.0
+        self.notchContentHeight = 74.0
+        self.notchElementScale = 1.0
+        self.notchElementAlignment = "balanced"
+        self.notchVerticalOffset = 0.0
     }
 
     private init(defaults: UserDefaults = .standard) {
@@ -110,7 +143,12 @@ public final class AppSettings: ObservableObject {
             Keys.screenDistanceSensitivity: 0.42,
             Keys.screenDistanceWarningSeconds: 3.0,
             Keys.distanceCalibrationFactor: 1.0,
-            Keys.targetDistanceThresholdInches: 18.0
+            Keys.targetDistanceThresholdInches: 18.0,
+            Keys.notchWidth: 500.0,
+            Keys.notchContentHeight: 74.0,
+            Keys.notchElementScale: 1.0,
+            Keys.notchElementAlignment: "balanced",
+            Keys.notchVerticalOffset: 0.0
         ])
 
         self.workIntervalMinutes = defaults.double(forKey: Keys.workIntervalMinutes)
@@ -129,6 +167,20 @@ public final class AppSettings: ObservableObject {
 
         let savedThreshold = defaults.double(forKey: Keys.targetDistanceThresholdInches)
         self.targetDistanceThresholdInches = savedThreshold > 0.0 ? savedThreshold : 18.0
+
+        let savedWidth = defaults.double(forKey: Keys.notchWidth)
+        self.notchWidth = savedWidth > 0.0 ? savedWidth : 500.0
+
+        let savedHeight = defaults.double(forKey: Keys.notchContentHeight)
+        self.notchContentHeight = savedHeight > 0.0 ? savedHeight : 74.0
+
+        let savedScale = defaults.double(forKey: Keys.notchElementScale)
+        self.notchElementScale = savedScale > 0.0 ? savedScale : 1.0
+
+        let savedAlign = defaults.string(forKey: Keys.notchElementAlignment)
+        self.notchElementAlignment = (savedAlign != nil && !savedAlign!.isEmpty) ? savedAlign! : "balanced"
+
+        self.notchVerticalOffset = defaults.double(forKey: Keys.notchVerticalOffset)
 
         checkLaunchAtLoginStatus()
     }
