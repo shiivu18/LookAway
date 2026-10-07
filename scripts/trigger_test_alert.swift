@@ -7,6 +7,9 @@ switch arg {
 case "distance", "dist", "screendistance":
     notificationName = "com.eyebreak.triggerDistanceAlert"
     print("==> Triggering Screen Distance Alert...")
+case "notch", "live", "hud":
+    notificationName = "com.eyebreak.toggleNotchDistance"
+    print("==> Toggling Notch Live Distance...")
 case "settings":
     notificationName = "com.eyebreak.openSettings"
     print("==> Opening EyeBreak Settings...")
