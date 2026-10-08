@@ -12,7 +12,8 @@ targets:
       - path: Sources
     settings:
       base:
-        PRODUCT_NAME: EyeBreak
+        PRODUCT_NAME: LookAway
+        INFOPLIST_KEY_CFBundleDisplayName: LookAway
         PRODUCT_BUNDLE_IDENTIFIER: com.eyebreak.app
         INFOPLIST_FILE: Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Resources/EyeBreak.entitlements

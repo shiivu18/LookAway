@@ -197,7 +197,56 @@ public struct SettingsView: View {
                                         .font(.system(size: 10))
                                         .foregroundColor(.secondary)
                                 }
+            // Notch Appearance Adjuster
+            GroupBox(label: Label("Notch Appearance", systemImage: "rectangle.portrait.bottomright.inset.filled")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Width Slider
+                    HStack {
+                        Text("Notch Width:")
+                        Spacer()
+                        Text("\(Int(settings.notchWidth))")
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $settings.notchWidth, in: 300...800, step: 1)
 
+                    // Height Slider
+                    HStack {
+                        Text("Notch Content Height:")
+                        Spacer()
+                        Text("\(Int(settings.notchContentHeight))")
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $settings.notchContentHeight, in: 40...150, step: 1)
+
+                    // Scale Slider
+                    HStack {
+                        Text("Element Scale:")
+                        Spacer()
+                        Text(String(format: "%.2f", settings.notchElementScale))
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $settings.notchElementScale, in: 0.5...2.0, step: 0.01)
+
+                    // Vertical Offset Slider
+                    HStack {
+                        Text("Vertical Offset:")
+                        Spacer()
+                        Text(String(format: "%.0f", settings.notchVerticalOffset))
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $settings.notchVerticalOffset, in: -30...30, step: 1)
+
+                    // Alignment Picker
+                    Picker("Alignment:", selection: $settings.notchElementAlignment) {
+                        Text("Centered").tag("center")
+                        Text("Leading").tag("leading")
+                        Text("Trailing").tag("trailing")
+                        Text("Balanced").tag("balanced")
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .padding(10)
+            }
                                 Divider()
 
                                 // Camera Status Row

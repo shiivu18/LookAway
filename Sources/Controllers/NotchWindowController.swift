@@ -27,6 +27,7 @@ public final class NotchWindowController: NSObject {
     }
 
     private func observeSettings() {
+        // Geometry settings (Double values)
         Publishers.Merge3(
             settings.$notchWidth,
             settings.$notchContentHeight,
@@ -37,6 +38,22 @@ public final class NotchWindowController: NSObject {
             self?.updateLayoutIfVisible()
         }
         .store(in: &cancellables)
+
+        // Scale (Double)
+        settings.$notchElementScale
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateLayoutIfVisible()
+            }
+            .store(in: &cancellables)
+
+        // Alignment (String)
+        settings.$notchElementAlignment
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateLayoutIfVisible()
+            }
+            .store(in: &cancellables)
     }
 
     public func updateLayoutIfVisible() {
