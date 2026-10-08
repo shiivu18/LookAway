@@ -194,13 +194,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LookAway;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eyebreak.app;
-				PRODUCT_NAME = EyeBreak;
+				PRODUCT_NAME = LookAway;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
 			};
@@ -333,13 +334,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LookAway;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eyebreak.app;
-				PRODUCT_NAME = EyeBreak;
+				PRODUCT_NAME = LookAway;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
 			};
