@@ -373,7 +373,7 @@ public struct NotchAlertView: View {
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundColor(distanceThemeColor)
                 } else {
-                    Text("👤 Looking for Person")
+                    Text("Looking for Person")
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
 
