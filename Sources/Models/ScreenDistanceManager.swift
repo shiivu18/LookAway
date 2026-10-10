@@ -136,6 +136,17 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
             .store(in: &cancellables)
     }
 
+    // Pre‑warm capture session for instant notch activation
+    public func prewarm() {
+        sessionQueue.sync { [weak self] in
+            guard let self = self else { return }
+            if self.captureSession == nil {
+                self.setupCaptureSession()
+            }
+        }
+    }
+
+
     // MARK: - Capture Session Management
 
     public func startMonitoring() {
