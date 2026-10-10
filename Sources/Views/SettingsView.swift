@@ -248,7 +248,20 @@ public struct SettingsView: View {
                 .padding(10)
             }
                                 Divider()
-
+                                 GroupBox(label: Label("Notch Customization", systemImage: "slider.horizontal.3")) {
+                                     VStack(alignment: .leading, spacing: 12) {
+                                         Toggle("Enable Notch Customization", isOn: $settings.notchResizeEnabled)
+                                         HStack {
+                                             Text("Display Duration (seconds):")
+                                             Spacer()
+                                             Text("\(Int(settings.notchDisplaySeconds))")
+                                                 .foregroundColor(.secondary)
+                                         }
+                                         Slider(value: $settings.notchDisplaySeconds, in: 1...60, step: 1)
+                                     }
+                                     .padding(10)
+                                 }
+                                 Divider()
                                 // Camera Status Row
                                 HStack {
                                     Text("Camera Status:")

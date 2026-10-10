@@ -70,7 +70,7 @@ public final class NotchWindowController: NSObject {
     }
 
     /// Prepares or shows the notch alert window on the display containing the cursor.
-    public func show(alertType: NotchAlertType = .eyeBreak, durationSeconds: Int = 20) {
+    public func show(alertType: NotchAlertType = .eyeBreak, durationSeconds: Int = Int(settings.notchDisplaySeconds)) {
         // Ensure the camera subsystem is pre‑warmed and monitoring starts instantly
         let manager = ScreenDistanceManager.shared
         manager.prewarm()
