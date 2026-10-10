@@ -7,9 +7,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.eyebreak.app</string>
     <key>CFBundleName</key>
-    <string>LookAway</string>
+    <string>EyeBreak</string>
     <key>CFBundleDisplayName</key>
-    <string>LookAway</string>
+    <string>EyeBreak</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -27,6 +27,6 @@
     <key>NSSupportsAutomaticTermination</key>
     <false/>
     <key>NSCameraUsageDescription</key>
-    <string>LookAway uses the camera locally with on-device Vision processing to measure your screen distance and warn you if you are sitting too close. Video is never saved or transmitted.</string>
+    <string>EyeBreak uses the camera locally with on-device Vision processing to measure your screen distance and warn you if you are sitting too close. Video is never saved or transmitted.</string>
 </dict>
 </plist>

@@ -12,7 +12,7 @@ case "notch", "live", "hud":
     print("==> Toggling Notch Live Distance...")
 case "settings":
     notificationName = "com.eyebreak.openSettings"
-    print("==> Opening EyeBreak Settings...")
+    print("==> Opening LookAway Settings...")
 default:
     notificationName = "com.eyebreak.triggerTestAlert"
     print("==> Triggering 20-20-20 Eye Break Alert...")

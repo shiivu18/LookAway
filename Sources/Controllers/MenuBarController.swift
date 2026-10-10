@@ -24,20 +24,20 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     public func setup() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            if let image = NSImage(systemSymbolName: "eye", accessibilityDescription: "EyeBreak") {
+            if let image = NSImage(systemSymbolName: "eye", accessibilityDescription: "LookAway") {
                 image.isTemplate = true
                 button.image = image
             } else {
-                button.title = "👁"
+                button.title = ""
             }
-            button.toolTip = "EyeBreak • 20-20-20 Eye Rest"
+            button.toolTip = "LookAway • 20-20-20 Eye Rest"
         }
 
         let newMenu = NSMenu()
         newMenu.delegate = self
 
         // 1. Status header (time remaining)
-        let statusItem = NSMenuItem(title: "EyeBreak: Loading...", action: nil, keyEquivalent: "")
+        let statusItem = NSMenuItem(title: "LookAway: Loading...", action: nil, keyEquivalent: "")
         statusItem.isEnabled = false
         newMenu.addItem(statusItem)
         self.statusMenuItem = statusItem
@@ -116,7 +116,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
 
         // 9. Quit
         let quitItem = NSMenuItem(
-            title: "Quit EyeBreak",
+            title: "Quit LookAway",
             action: #selector(quitAction),
             keyEquivalent: "q"
         )
@@ -166,17 +166,17 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
 
     private func updateMenuContent() {
         statusMenuItem?.title = timerManager.menuStatusTitle
-        statusItem?.button?.toolTip = "EyeBreak: \(timerManager.menuStatusTitle)"
+        statusItem?.button?.toolTip = "LookAway: \(timerManager.menuStatusTitle)"
 
         let isPaused = timerManager.isPausedManually
         pauseResumeMenuItem?.title = isPaused ? "Resume Timer" : "Pause Timer"
 
         if timerManager.state == .breakActive {
             skipMenuItem?.title = "Skip Active Break"
-            statusItem?.button?.image = NSImage(systemSymbolName: "eye.fill", accessibilityDescription: "EyeBreak Active")
+            statusItem?.button?.image = NSImage(systemSymbolName: "eye.fill", accessibilityDescription: "LookAway Active")
         } else {
             skipMenuItem?.title = "Reset Work Timer"
-            statusItem?.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: "EyeBreak")
+            statusItem?.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: "LookAway")
         }
         statusItem?.button?.image?.isTemplate = true
 
@@ -233,7 +233,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
             defer: false
         )
         window.center()
-        window.title = "EyeBreak Settings"
+        window.title = "LookAway Settings"
         window.contentView = NSHostingView(rootView: SettingsView())
         window.isReleasedWhenClosed = false
         window.makeKeyAndOrderFront(nil)
