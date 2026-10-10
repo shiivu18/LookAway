@@ -132,7 +132,9 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     }
 
     private func observeTimer() {
-        // Update menu bar tooltips and labels when timer ticks
+        // Update menu bar UI whenever relevant timer state changes.
+        // Break countdown needs its own publisher because the state stays .breakActive
+        // while the remaining time ticks down; otherwise the menu can stale out.
         timerManager.$timeRemainingWork
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -140,7 +142,21 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
             }
             .store(in: &cancellables)
 
+        timerManager.$timeRemainingBreak
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateMenuContent()
+            }
+            .store(in: &cancellables)
+
         timerManager.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateMenuContent()
+            }
+            .store(in: &cancellables)
+
+        timerManager.$isPausedManually
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.updateMenuContent()
