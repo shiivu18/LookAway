@@ -16,6 +16,8 @@ public final class AppSettings: ObservableObject {
         static let maxScreenDistanceSensitivity = 1.0
         static let minScreenDistanceWarningSeconds = 1.0
         static let maxScreenDistanceWarningSeconds = 30.0
+        static let minNotchDisplaySeconds = 1.0
+        static let maxNotchDisplaySeconds = 60.0
     }
 
     private enum Keys {
@@ -36,6 +38,8 @@ public final class AppSettings: ObservableObject {
         static let notchElementScale = "notchElementScale"
         static let notchElementAlignment = "notchElementAlignment"
         static let notchVerticalOffset = "notchVerticalOffset"
+        static let notchResizeEnabled = "notchResizeEnabled"
+        static let notchDisplaySeconds = "notchDisplaySeconds"
     }
 
     private let defaults: UserDefaults
@@ -151,6 +155,14 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(notchVerticalOffset, forKey: Keys.notchVerticalOffset) }
     }
 
+    @Published public var notchResizeEnabled: Bool {
+        didSet { defaults.set(notchResizeEnabled, forKey: Keys.notchResizeEnabled) }
+    }
+
+    @Published public var notchDisplaySeconds: Double {
+        didSet { defaults.set(notchDisplaySeconds, forKey: Keys.notchDisplaySeconds) }
+    }
+
     @Published public var launchAtLogin: Bool = false
 
     public var workIntervalSeconds: Int {
@@ -198,7 +210,9 @@ public final class AppSettings: ObservableObject {
             Keys.notchContentHeight: 74.0,
             Keys.notchElementScale: 1.0,
             Keys.notchElementAlignment: "balanced",
-            Keys.notchVerticalOffset: 0.0
+            Keys.notchVerticalOffset: 0.0,
+            Keys.notchResizeEnabled: true,
+            Keys.notchDisplaySeconds: 5.0
         ])
 
         self.workIntervalMinutes = defaults.double(forKey: Keys.workIntervalMinutes)
@@ -211,27 +225,15 @@ public final class AppSettings: ObservableObject {
         self.screenDistanceEnabled = defaults.bool(forKey: Keys.screenDistanceEnabled)
         self.screenDistanceSensitivity = defaults.double(forKey: Keys.screenDistanceSensitivity)
         self.screenDistanceWarningSeconds = defaults.double(forKey: Keys.screenDistanceWarningSeconds)
-
-        let savedCal = defaults.double(forKey: Keys.distanceCalibrationFactor)
-        self.distanceCalibrationFactor = savedCal > 0.0 ? savedCal : 1.0
-
-        let savedThreshold = defaults.double(forKey: Keys.targetDistanceThresholdInches)
-        self.targetDistanceThresholdInches = savedThreshold > 0.0 ? savedThreshold : 18.0
-
-        let savedWidth = defaults.double(forKey: Keys.notchWidth)
-        self.notchWidth = savedWidth > 0.0 ? savedWidth : 500.0
-
-        let savedHeight = defaults.double(forKey: Keys.notchContentHeight)
-        self.notchContentHeight = savedHeight > 0.0 ? savedHeight : 74.0
-
-        let savedScale = defaults.double(forKey: Keys.notchElementScale)
-        self.notchElementScale = savedScale > 0.0 ? savedScale : 1.0
-
-        let savedAlign = defaults.string(forKey: Keys.notchElementAlignment)
-        self.notchElementAlignment = (savedAlign != nil && !savedAlign!.isEmpty) ? savedAlign! : "balanced"
-
+        self.distanceCalibrationFactor = defaults.double(forKey: Keys.distanceCalibrationFactor) > 0.0 ? defaults.double(forKey: Keys.distanceCalibrationFactor) : 1.0
+        self.targetDistanceThresholdInches = defaults.double(forKey: Keys.targetDistanceThresholdInches) > 0.0 ? defaults.double(forKey: Keys.targetDistanceThresholdInches) : 18.0
+        self.notchWidth = defaults.double(forKey: Keys.notchWidth) > 0.0 ? defaults.double(forKey: Keys.notchWidth) : 500.0
+        self.notchContentHeight = defaults.double(forKey: Keys.notchContentHeight) > 0.0 ? defaults.double(forKey: Keys.notchContentHeight) : 74.0
+        self.notchElementScale = defaults.double(forKey: Keys.notchElementScale) > 0.0 ? defaults.double(forKey: Keys.notchElementScale) : 1.0
+        self.notchElementAlignment = (defaults.string(forKey: Keys.notchElementAlignment) ?? "").isEmpty ? "balanced" : defaults.string(forKey: Keys.notchElementAlignment)!
         self.notchVerticalOffset = defaults.double(forKey: Keys.notchVerticalOffset)
-
+        self.notchResizeEnabled = defaults.bool(forKey: Keys.notchResizeEnabled)
+        self.notchDisplaySeconds = defaults.double(forKey: Keys.notchDisplaySeconds) > 0.0 ? defaults.double(forKey: Keys.notchDisplaySeconds) : 5.0
         checkLaunchAtLoginStatus()
     }
 
