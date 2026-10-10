@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:eye}",
+            "name": "Debug EyeBreak",
+            "target": "EyeBreak",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug EyeBreak"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:eye}",
+            "name": "Release EyeBreak",
+            "target": "EyeBreak",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release EyeBreak"
+        }
+    ]
+}
