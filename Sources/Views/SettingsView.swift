@@ -39,7 +39,7 @@ public struct SettingsView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("EyeBreak Settings")
+                    Text("LookAway Settings")
                         .font(.system(size: 16, weight: .bold))
                     Text("20-20-20 Rule & Screen Distance Guardian")
                         .font(.system(size: 12))

@@ -7,7 +7,7 @@ cd "$DIR"
 echo "==> Generating Xcode project..."
 xcodegen generate
 
-echo "==> Building EyeBreak binary with SwiftPM..."
+echo "==> Building LookAway binary with SwiftPM..."
 swift build -c release
 
 BIN_PATH="$(find .build -name "EyeBreak" -type f -perm +111 | grep -i release | head -n 1)"
@@ -18,7 +18,7 @@ fi
 
 echo "Found binary at: $BIN_PATH"
 
-APP_BUNDLE="EyeBreak.app"
+APP_BUNDLE="LookAway.app"
 echo "==> Packaging $APP_BUNDLE..."
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"

@@ -8,16 +8,16 @@ for (i, screen) in NSScreen.screens.enumerated() {
     if let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea {
         print("  Physical Notch detected! Width: \(right.minX - left.maxX), Height: \(screen.safeAreaInsets.top)")
     } else {
-        print("  Notchless display detected. EyeBreak will render a sleek top-centered Dynamic Island pill.")
+        print("  Notchless display detected. LookAway will render a sleek top-centered Dynamic Island pill.")
     }
 }
 
-print("\n==> Checking active windows for 'EyeBreak':")
+print("\n==> Checking active windows for 'LookAway':")
 let onScreenWindows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
-let eyeVisible = onScreenWindows.filter { ($0[kCGWindowOwnerName as String] as? String) == "EyeBreak" }
+let lookAwayVisible = onScreenWindows.filter { ($0[kCGWindowOwnerName as String] as? String) == "LookAway" }
 
-print("Visible on-screen EyeBreak windows count: \(eyeVisible.count)")
-for (idx, w) in eyeVisible.enumerated() {
+print("Visible on-screen LookAway windows count: \(lookAwayVisible.count)")
+for (idx, w) in lookAwayVisible.enumerated() {
     let name = w[kCGWindowName as String] ?? "(unnamed)"
     let layer = w[kCGWindowLayer as String] ?? 0
     let boundsDict = w[kCGWindowBounds as String] as? [String: Any] ?? [:]
