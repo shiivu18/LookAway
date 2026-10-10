@@ -56,7 +56,10 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
     private var lastSampleTime: TimeInterval = 0
     private var consecutiveTooCloseSeconds: Int = 0
     private var consecutiveNormalSeconds: Int = 0
-    private var testSimulationTimer: Timer?
+    // Use a DispatchSourceTimer for simulated distance changes – safer than Foundation Timer and avoids overlapping runs
+    private var simulationTimer: DispatchSourceTimer?
+    // Separate timer for alert debounce/resolution to prevent overlapping alert handling
+    private var alertResolutionTimer: DispatchSourceTimer?
 
     private let settings = AppSettings.shared
     private var cancellables = Set<AnyCancellable>()
@@ -137,11 +140,13 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
     public func startMonitoring() {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
-            if self.captureSession?.isRunning == true { return }
+            // Prevent duplicate session starts
+            guard self.captureSession?.isRunning != true else { return }
 
             self.setupCaptureSession()
             self.captureSession?.startRunning()
 
+            // All UI‑related state updates must happen on the main thread
             DispatchQueue.main.async {
                 self.isMonitoring = true
             }
@@ -151,15 +156,22 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
     public func stopMonitoring() {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
+            // Safely stop the session if it is active
             if self.captureSession?.isRunning == true {
                 self.captureSession?.stopRunning()
             }
+            // Reset all exported state on the main thread to keep UI consistent
             DispatchQueue.main.async {
                 self.isMonitoring = false
                 self.isTooClose = false
                 self.hasDetectedFace = false
                 self.distanceZone = .unknown
                 self.currentFaceMetric = 0.0
+                // Cancel any pending timers to avoid stray callbacks after stop
+                self.simulationTimer?.cancel()
+                self.simulationTimer = nil
+                self.alertResolutionTimer?.cancel()
+                self.alertResolutionTimer = nil
             }
         }
     }
@@ -321,26 +333,40 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
             let tooCloseNow = self.smoothedDistanceInches < threshold
 
             if tooCloseNow {
+                // Reset normal counter when too close persists; increment too‑close counter
                 self.consecutiveNormalSeconds = 0
                 self.consecutiveTooCloseSeconds += 1
 
+                // Trigger alert only after warning threshold is met, using a dedicated debounce timer to avoid rapid re‑entrance
                 if self.consecutiveTooCloseSeconds >= Int(self.settings.screenDistanceWarningSeconds) {
                     self.isTooClose = true
                     if !self.isAlertActive {
+                        // Cancel any pending resolve timer before triggering a new alert
+                        self.alertResolutionTimer?.cancel()
+                        self.alertResolutionTimer = nil
                         self.triggerAlert()
                     }
                 }
             } else {
+                // Reset too‑close counter when user moves back to a safe zone
                 self.consecutiveTooCloseSeconds = 0
                 if self.isTooClose {
                     self.consecutiveNormalSeconds += 1
+                    // Resolve alert once user stays beyond threshold for a short grace period
                     if self.smoothedDistanceInches >= (threshold + 1.5) || self.consecutiveNormalSeconds >= 2 {
                         self.isTooClose = false
                         if self.isAlertActive {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                            // Use debounce timer to prevent flickering alerts on borderline distances
+                            self.alertResolutionTimer?.cancel()
+                            self.alertResolutionTimer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+                            self.alertResolutionTimer?.schedule(deadline: .now() + 1.2)
+                            self.alertResolutionTimer?.setEventHandler { [weak self] in
                                 guard let self = self, !self.isTooClose else { return }
                                 self.resolveAlert()
+                                self.alertResolutionTimer?.cancel()
+                                self.alertResolutionTimer = nil
                             }
+                            self.alertResolutionTimer?.resume()
                         }
                     }
                 }
