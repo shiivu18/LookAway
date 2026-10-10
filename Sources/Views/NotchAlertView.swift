@@ -518,6 +518,7 @@ public struct NotchAlertView: View {
             return "Lean Back Slightly"
         case .safe:
             return "Optimal Posture"
+            return "• Optimal Posture"
         case .far:
             return "Relaxed Distance"
         case .unknown:
