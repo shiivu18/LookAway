@@ -28,7 +28,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
                 image.isTemplate = true
                 button.image = image
             } else {
-                button.title = "👁"
+                button.title = ""
             }
             button.toolTip = "LookAway • 20-20-20 Eye Rest"
         }

@@ -513,13 +513,13 @@ public struct NotchAlertView: View {
     private var targetStatusText: String {
         switch screenDistanceManager.distanceZone {
         case .tooClose:
-            return "• Target: 20\"+"
+            return "Target: 20\"+"
         case .caution:
-            return "• Lean Back Slightly"
+            return "Lean Back Slightly"
         case .safe:
-            return "• Optimal Posture"
+            return "Optimal Posture"
         case .far:
-            return "• Relaxed Distance"
+            return "Relaxed Distance"
         case .unknown:
             return ""
         }
