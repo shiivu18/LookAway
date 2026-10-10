@@ -60,6 +60,7 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
     private var simulationTimer: DispatchSourceTimer?
     // Separate timer for alert debounce/resolution to prevent overlapping alert handling
     private var alertResolutionTimer: DispatchSourceTimer?
+    private var testSimulationTimer: Timer?
 
     private let settings = AppSettings.shared
     private var cancellables = Set<AnyCancellable>()
