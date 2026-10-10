@@ -27,6 +27,6 @@
     <key>NSSupportsAutomaticTermination</key>
     <false/>
     <key>NSCameraUsageDescription</key>
-    <string>EyeBreak uses the camera locally with on-device Vision processing to measure your screen distance and warn you if you are sitting too close. Video is never saved or transmitted.</string>
+    <string>LookAway uses the camera locally with on-device Vision processing to measure your screen distance and warn you if you are sitting too close. Video is never saved or transmitted.</string>
 </dict>
 </plist>
