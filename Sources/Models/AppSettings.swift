@@ -79,7 +79,14 @@ public final class AppSettings: ObservableObject {
     }
 
     @Published public var idleThresholdMinutes: Double {
-        didSet { defaults.set(idleThresholdMinutes, forKey: Keys.idleThresholdMinutes) }
+        didSet {
+            let sanitized = clamp(idleThresholdMinutes, min: Constants.minIdleThresholdMinutes, max: Constants.maxIdleThresholdMinutes)
+            if sanitized != idleThresholdMinutes {
+                idleThresholdMinutes = sanitized
+                return
+            }
+            defaults.set(idleThresholdMinutes, forKey: Keys.idleThresholdMinutes)
+        }
     }
 
     @Published public var screenDistanceEnabled: Bool {
@@ -88,6 +95,11 @@ public final class AppSettings: ObservableObject {
 
     @Published public var screenDistanceSensitivity: Double {
         didSet {
+            let sanitized = clamp(screenDistanceSensitivity, min: Constants.minScreenDistanceSensitivity, max: Constants.maxScreenDistanceSensitivity)
+            if sanitized != screenDistanceSensitivity {
+                screenDistanceSensitivity = sanitized
+                return
+            }
             defaults.set(screenDistanceSensitivity, forKey: Keys.screenDistanceSensitivity)
             // Sync threshold inches to sensitivity preset
             if screenDistanceSensitivity >= 0.48 {
@@ -101,7 +113,14 @@ public final class AppSettings: ObservableObject {
     }
 
     @Published public var screenDistanceWarningSeconds: Double {
-        didSet { defaults.set(screenDistanceWarningSeconds, forKey: Keys.screenDistanceWarningSeconds) }
+        didSet {
+            let sanitized = clamp(screenDistanceWarningSeconds, min: Constants.minScreenDistanceWarningSeconds, max: Constants.maxScreenDistanceWarningSeconds)
+            if sanitized != screenDistanceWarningSeconds {
+                screenDistanceWarningSeconds = sanitized
+                return
+            }
+            defaults.set(screenDistanceWarningSeconds, forKey: Keys.screenDistanceWarningSeconds)
+        }
     }
 
     @Published public var distanceCalibrationFactor: Double {
@@ -144,6 +163,10 @@ public final class AppSettings: ObservableObject {
 
     public var idleThresholdSeconds: Double {
         idleThresholdMinutes * 60
+    }
+
+    private func clamp(_ value: Double, min: Double, max: Double) -> Double {
+        Swift.min(Swift.max(value, min), max)
     }
 
     public func resetNotchAppearance() {
