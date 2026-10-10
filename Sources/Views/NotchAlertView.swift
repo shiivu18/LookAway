@@ -223,33 +223,35 @@ public struct NotchAlertView: View {
                 // Right Side Controls
                 HStack(spacing: 10) {
                     if alertType.isDistanceType {
-                        // Digital badge readout
-                        VStack(spacing: 1) {
-                            if screenDistanceManager.hasDetectedFace {
-                                Text("\(screenDistanceManager.displayDistanceInches)\"")
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                                    .foregroundColor(distanceThemeColor)
-                                    .monospacedDigit()
+                        // Digital badge readout (only for screenDistance)
+                        if alertType == .screenDistance {
+                            VStack(spacing: 1) {
+                                if screenDistanceManager.hasDetectedFace {
+                                    Text("\(screenDistanceManager.displayDistanceInches)\"")
+                                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                                        .foregroundColor(distanceThemeColor)
+                                        .monospacedDigit()
 
-                                Text(badgeStatusText)
-                                    .font(.system(size: 8.5, weight: .black, design: .monospaced))
-                                    .foregroundColor(distanceThemeColor)
-                            } else {
-                                Text("--\"")
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                                    .foregroundColor(Color(white: 0.5))
+                                    Text(badgeStatusText)
+                                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                                        .foregroundColor(distanceThemeColor)
+                                } else {
+                                    Text("--\"")
+                                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                                        .foregroundColor(Color(white: 0.5))
 
-                                Text("WAITING")
-                                    .font(.system(size: 8.5, weight: .black, design: .monospaced))
-                                    .foregroundColor(Color(white: 0.5))
+                                    Text("WAITING")
+                                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                                        .foregroundColor(Color(white: 0.5))
+                                }
                             }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(distanceThemeColor.opacity(0.16))
+                            )
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(distanceThemeColor.opacity(0.16))
-                        )
 
                         // Close / Dismiss button
                         Button(action: {
