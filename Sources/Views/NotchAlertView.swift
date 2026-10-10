@@ -377,7 +377,7 @@ public struct NotchAlertView: View {
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
 
-                    Text("• Center yourself in notch view")
+                    Text("Center yourself in notch view")
                         .font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundColor(Color(white: 0.65))
                 }
@@ -467,7 +467,7 @@ public struct NotchAlertView: View {
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
 
-                Text("• 20-20-20")
+                Text("20-20-20")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundColor(.teal.opacity(0.9))
             }
