@@ -343,10 +343,13 @@ public struct NotchAlertView: View {
             .padding(.bottom, hasPhysicalNotch ? 8 : 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                viewModel.isPulsing = true
-            }
+        // Ensure camera monitoring is active for fast detection when the notch first appears
+        if !screenDistanceManager.isMonitoring {
+            screenDistanceManager.startMonitoring()
+        }
+        // Preserve existing pulsing animation
+        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+            viewModel.isPulsing = true
         }
     }
 }
