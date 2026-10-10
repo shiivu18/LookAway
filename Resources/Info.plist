@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>EyeBreak</string>
+    <string>LookAway</string>
     <key>CFBundleIdentifier</key>
-    <string>com.eyebreak.app</string>
+    <string>com.lookaway.app</string>
     <key>CFBundleName</key>
     <string>LookAway</string>
     <key>CFBundleDisplayName</key>

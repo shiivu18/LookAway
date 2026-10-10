@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "EyeBreak",
+    name: "LookAway",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "EyeBreak", targets: ["EyeBreak"])
+        .executable(name: "LookAway", targets: ["LookAway"])
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "EyeBreak",
+            name: "LookAway",
             dependencies: [],
             path: "Sources"
         )
