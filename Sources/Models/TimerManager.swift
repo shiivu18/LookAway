@@ -36,9 +36,10 @@ public final class TimerManager: ObservableObject {
     public var onShowAlert: ((_ durationSeconds: Int) -> Void)?
     public var onDismissAlert: (() -> Void)?
 
-    private var tickerTimer: Timer?
+    private var tickerTimer: DispatchSourceTimer?
     private let settings = AppSettings.shared
     private var cancellables = Set<AnyCancellable>()
+    private var lastTickTimestamp = Date()
 
     private init() {
         self.timeRemainingWork = settings.workIntervalSeconds
@@ -51,7 +52,7 @@ public final class TimerManager: ObservableObject {
     }
 
     deinit {
-        tickerTimer?.invalidate()
+        tickerTimer?.cancel()
         DistributedNotificationCenter.default().removeObserver(self)
         NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
@@ -145,16 +146,22 @@ public final class TimerManager: ObservableObject {
     // MARK: - Ticker Loop
 
     private func startTicker() {
-        tickerTimer?.invalidate()
-        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+        tickerTimer?.cancel()
+
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now(), repeating: .milliseconds(100), leeway: .milliseconds(50))
+        timer.setEventHandler { [weak self] in
             self?.tick()
         }
-        RunLoop.main.add(timer, forMode: .common)
+        timer.resume()
         self.tickerTimer = timer
     }
 
     private func tick() {
-        // Check Idle status
+        let now = Date()
+        let elapsedSeconds = max(0, Int(ceil(now.timeIntervalSince(lastTickTimestamp))))
+        lastTickTimestamp = now
+
         if settings.idlePauseEnabled {
             let currentlyIdle = IdleDetector.isUserIdle(thresholdSeconds: settings.idleThresholdSeconds)
             if currentlyIdle != isIdle {
@@ -166,23 +173,21 @@ public final class TimerManager: ObservableObject {
             updateState()
         }
 
-        // If paused by user or system/idle, don't count down
         guard shouldRunTimer() else { return }
+        guard elapsedSeconds > 0 else { return }
 
         switch state {
         case .working:
-            if timeRemainingWork > 0 {
-                timeRemainingWork -= 1
-            }
-            if timeRemainingWork <= 0 {
+            let nextValue = max(0, timeRemainingWork - elapsedSeconds)
+            timeRemainingWork = nextValue
+            if nextValue == 0 {
                 triggerBreak()
             }
 
         case .breakActive:
-            if timeRemainingBreak > 0 {
-                timeRemainingBreak -= 1
-            }
-            if timeRemainingBreak <= 0 {
+            let nextValue = max(0, timeRemainingBreak - elapsedSeconds)
+            timeRemainingBreak = nextValue
+            if nextValue == 0 {
                 finishBreak()
             }
 
@@ -203,6 +208,7 @@ public final class TimerManager: ObservableObject {
             state = .paused
             return
         }
+
         if settings.pauseOnSleepAndLock {
             if isSleeping {
                 state = .systemPaused(reason: "Mac Asleep")
@@ -213,20 +219,18 @@ public final class TimerManager: ObservableObject {
                 return
             }
         }
+
         if settings.idlePauseEnabled && isIdle && state != .breakActive {
             state = .idlePaused
             return
         }
 
-        // Active state
-        if timeRemainingBreak > 0 && (state == .breakActive || onShowAlert != nil) {
-            // Keep breakActive if currently in break
-            if state != .breakActive && state != .working {
-                state = .breakActive
-            }
-        } else {
-            state = .working
+        if state == .breakActive || (timeRemainingBreak > 0 && onShowAlert != nil) {
+            state = .breakActive
+            return
         }
+
+        state = .working
     }
 
     // MARK: - Actions
@@ -235,6 +239,7 @@ public final class TimerManager: ObservableObject {
         breakTotalDuration = max(5, settings.breakIntervalSeconds)
         timeRemainingBreak = breakTotalDuration
         state = .breakActive
+        lastTickTimestamp = Date()
 
         SoundManager.shared.playAlertSound()
         onShowAlert?(breakTotalDuration)
@@ -257,6 +262,7 @@ public final class TimerManager: ObservableObject {
         timeRemainingWork = max(60, settings.workIntervalSeconds)
         timeRemainingBreak = settings.breakIntervalSeconds
         breakTotalDuration = settings.breakIntervalSeconds
+        lastTickTimestamp = Date()
         state = isPausedManually ? .paused : .working
     }
 
