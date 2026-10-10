@@ -504,9 +504,9 @@ public struct NotchAlertView: View {
 
     private var titleText: String {
         if alertType == .liveDistanceHUD {
-            return screenDistanceManager.isTooClose ? "⚠️ Sitting Too Close:" : "📏 Person Distance:"
+            return screenDistanceManager.isTooClose ? "Sitting Too Close:" : "Person Distance:"
         } else {
-            return screenDistanceManager.isTooClose ? "⚠️ Sit Back:" : "✅ Safe Distance:"
+            return screenDistanceManager.isTooClose ? "Sit Back:" : "Safe Distance:"
         }
     }
 
@@ -517,7 +517,7 @@ public struct NotchAlertView: View {
         case .caution:
             return "• Lean Back Slightly"
         case .safe:
-            return "• Optimal Posture 👍"
+            return "• Optimal Posture"
         case .far:
             return "• Relaxed Distance"
         case .unknown:
@@ -532,7 +532,7 @@ public struct NotchAlertView: View {
         case .caution:
             return "CAUTION"
         case .safe:
-            return "SAFE ✓"
+            return "SAFE"
         case .far:
             return "FAR"
         case .unknown:
