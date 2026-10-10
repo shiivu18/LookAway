@@ -218,7 +218,7 @@ public final class ScreenDistanceManager: NSObject, ObservableObject, AVCaptureV
     public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         // High-frequency sampling (0.08s ~ 12 FPS) when notch alert or live HUD is active for silky smooth tracking.
         // Low-frequency sampling (0.8s) during background monitoring to maximize battery life.
-        let minInterval: TimeInterval = (isAlertActive || isLiveHUDActive) ? 0.08 : 0.8
+        let minInterval: TimeInterval = (isAlertActive || isLiveHUDActive) ? 0.08 : 0.3
         let now = CACurrentMediaTime()
         guard now - lastSampleTime >= minInterval else { return }
         lastSampleTime = now
