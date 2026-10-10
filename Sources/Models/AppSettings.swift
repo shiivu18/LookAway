@@ -5,6 +5,19 @@ import ServiceManagement
 public final class AppSettings: ObservableObject {
     public static let shared = AppSettings()
 
+    private enum Constants {
+        static let minWorkIntervalMinutes = 1.0
+        static let maxWorkIntervalMinutes = 120.0
+        static let minBreakDurationSeconds = 5.0
+        static let maxBreakDurationSeconds = 300.0
+        static let minIdleThresholdMinutes = 1.0
+        static let maxIdleThresholdMinutes = 60.0
+        static let minScreenDistanceSensitivity = 0.0
+        static let maxScreenDistanceSensitivity = 1.0
+        static let minScreenDistanceWarningSeconds = 1.0
+        static let maxScreenDistanceWarningSeconds = 30.0
+    }
+
     private enum Keys {
         static let workIntervalMinutes = "workIntervalMinutes"
         static let breakDurationSeconds = "breakDurationSeconds"
@@ -28,11 +41,25 @@ public final class AppSettings: ObservableObject {
     private let defaults: UserDefaults
 
     @Published public var workIntervalMinutes: Double {
-        didSet { defaults.set(workIntervalMinutes, forKey: Keys.workIntervalMinutes) }
+        didSet {
+            let sanitized = clamp(workIntervalMinutes, min: Constants.minWorkIntervalMinutes, max: Constants.maxWorkIntervalMinutes)
+            if sanitized != workIntervalMinutes {
+                workIntervalMinutes = sanitized
+                return
+            }
+            defaults.set(workIntervalMinutes, forKey: Keys.workIntervalMinutes)
+        }
     }
 
     @Published public var breakDurationSeconds: Double {
-        didSet { defaults.set(breakDurationSeconds, forKey: Keys.breakDurationSeconds) }
+        didSet {
+            let sanitized = clamp(breakDurationSeconds, min: Constants.minBreakDurationSeconds, max: Constants.maxBreakDurationSeconds)
+            if sanitized != breakDurationSeconds {
+                breakDurationSeconds = sanitized
+                return
+            }
+            defaults.set(breakDurationSeconds, forKey: Keys.breakDurationSeconds)
+        }
     }
 
     @Published public var soundEnabled: Bool {
